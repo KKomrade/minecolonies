@@ -18,6 +18,7 @@ import com.minecolonies.coremod.entity.NewBobberEntity;
 import com.minecolonies.coremod.entity.ai.basic.AbstractEntityAISkill;
 import com.minecolonies.coremod.entity.citizen.EntityCitizen;
 import com.minecolonies.coremod.util.WorkerUtil;
+import net.minecraft.block.AirBlock;
 import net.minecraft.block.Blocks;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.item.FishingRodItem;
@@ -307,9 +308,17 @@ public class EntityAIWorkFisherman extends AbstractEntityAISkill<JobFisherman, B
         {
             return START_WORKING;
         }
+        //If pond is below the fishing building the fisher needs to find a new block
+        if (!(world.getBlockState(job.getWater().getA().up()).getBlock() instanceof AirBlock))
+        {
+            job.removeFromPonds(job.getWater());
+            job.setWater(null);
+            executedRotations = 0;
+            return FISHERMAN_SEARCHING_WATER;
+        }
 
         //Try a different angle to throw the hook not that far
-        WorkerUtil.faceBlock(job.getWater().getA(), worker);
+        WorkerUtil.faceBlock(job.getWater().getA().up(), worker);
         executedRotations++;
         return FISHERMAN_START_FISHING;
     }
@@ -504,7 +513,7 @@ public class EntityAIWorkFisherman extends AbstractEntityAISkill<JobFisherman, B
     {
         if (!world.isRemote)
         {
-            WorkerUtil.faceBlock(job.getWater().getA(), worker);
+            WorkerUtil.faceBlock(job.getWater().getA().up(), worker);
             world.playSound(null,
               this.worker.getPosition(),
               SoundEvents.ENTITY_FISHING_BOBBER_THROW,
